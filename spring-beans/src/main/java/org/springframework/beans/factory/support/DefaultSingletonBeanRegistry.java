@@ -428,6 +428,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 			dependentBeans.add(dependentBeanName);
 		}
 		synchronized (this.dependenciesForBeanMap) {
+			//dependenciesForBeanMap：记录一个bean被哪些bean依赖
 			Set<String> dependenciesForBean = this.dependenciesForBeanMap.get(dependentBeanName);
 			if (dependenciesForBean == null) {
 				dependenciesForBean = new LinkedHashSet<String>(8);

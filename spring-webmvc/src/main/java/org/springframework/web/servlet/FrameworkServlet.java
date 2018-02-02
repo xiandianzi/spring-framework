@@ -520,8 +520,23 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 	 * @see #setContextConfigLocation
 	 */
 	protected WebApplicationContext initWebApplicationContext() {
+		//该方法主要是进行容器上下文的初始化工作，
+
+		//从HTTP容器（即Servlet容器）上下文 setvletContext 中获取 Spring 容器上下文，默认属性是 WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE，
+		// 此时不一定有值，如果是父容器初始化的时候，返回值是 NULL
+		//如果有值，Spring 上下文是什么时候放到 setvletContext中的呢？
+		//如果我们在配置文件中有配置 ContextLoadListener 的话，根据 ContextLoaderListener 的代码就可以知道，
+		// public class ContextLoaderListener extends ContextLoader implements ServletContextListener 这是 ContextLoaderListener 类的定义，继承了 ContextLoader 类，
+		// 并且实现了 ServletContextListener 接口，当我们启动 Servlet 容器时，就会执行如下方法：public void contextInitialized(ServletContextEvent event)，在该方法
+		// 中调用了 ContextLoader 类的 public WebApplicationContext initWebApplicationContext(ServletContext servletContext) 方法。在该方法中会执行如下一段代码：
+		// ervletContext.setAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, this.context);此时就会将一个 Spring 容器放入 ServletContext 中。
 		WebApplicationContext rootContext =
 				WebApplicationContextUtils.getWebApplicationContext(getServletContext());
+
+		//定义一个 Spring 上下文，
+		// 1.如果 FrameworkServlet 中的 webApplicationContext 属性(该值是在构造 FrameworkServlet 实例时通过构造器参数传入的) 不为空，则直接使用该属性，
+		// 2.如果为空，则调用 findWebApplicationContext() 查找，
+		// 3.如果还是没有找到，则创建一个实例  wac = createWebApplicationContext(rootContext);
 		WebApplicationContext wac = null;
 
 		if (this.webApplicationContext != null) {
@@ -546,6 +561,8 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 			// has been registered in the servlet context. If one exists, it is assumed
 			// that the parent context (if any) has already been set and that the
 			// user has performed any initialization such as setting the context id
+			// 如果在创建 FrameworkServlet 实例时没有注入 Spring 容器，看看在 ServletContext 中是否有已经注册过 Spring 上下文，
+			// 如果在 ServletContext 中存在，则假设父容器已经设置好了并且用户已经完成了初始化，例如设置contextId.
 			wac = findWebApplicationContext();
 		}
 		if (wac == null) {

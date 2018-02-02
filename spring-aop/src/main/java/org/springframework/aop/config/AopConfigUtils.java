@@ -86,10 +86,18 @@ public abstract class AopConfigUtils {
 		return registerAspectJAnnotationAutoProxyCreatorIfNecessary(registry, null);
 	}
 
+	/**
+	 * 对于 AOP 的实现，基本上都是靠 AnnotationAwareAspectJAutoProxyCreator 去完成，它可以根据 @Point 注解定义的切点来
+	 * 自动代理相匹配的 bean。但是为了配置简便，Spring使用了自定义的配置来帮助我们自动注册 AnnotationAwareAspectJAutoProxyCreator
+	 * 其过程就是在这里实现的
+	 */
 	public static BeanDefinition registerAspectJAnnotationAutoProxyCreatorIfNecessary(BeanDefinitionRegistry registry, Object source) {
 		return registerOrEscalateApcAsRequired(AnnotationAwareAspectJAutoProxyCreator.class, registry, source);
 	}
 
+	/**
+	 * 强制使用的过程其实也是一个属性设置的过程，设置 beanDefinition 的 proxyTargetClass 为 true
+	 */
 	public static void forceAutoProxyCreatorToUseClassProxying(BeanDefinitionRegistry registry) {
 		if (registry.containsBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME)) {
 			BeanDefinition definition = registry.getBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME);
@@ -104,10 +112,13 @@ public abstract class AopConfigUtils {
 		}
 	}
 
-
+	/**
+	 * 将 AnnotationAwareAspectJAutoProxyCreator 封装为一个BeanDefinition
+	 */
 	private static BeanDefinition registerOrEscalateApcAsRequired(Class<?> cls, BeanDefinitionRegistry registry, Object source) {
 		Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
 		if (registry.containsBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME)) {
+			// 如果已经存在了自动代理创建器，并且已存在的自动代理创建器与现在的不一致，那么需要根据优先级来判断使用哪一个
 			BeanDefinition apcDefinition = registry.getBeanDefinition(AUTO_PROXY_CREATOR_BEAN_NAME);
 			if (!cls.getName().equals(apcDefinition.getBeanClassName())) {
 				int currentPriority = findPriorityForClass(apcDefinition.getBeanClassName());

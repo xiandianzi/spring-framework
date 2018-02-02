@@ -123,9 +123,13 @@ public abstract class AbstractRefreshableApplicationContext extends AbstractAppl
 			closeBeanFactory();
 		}
 		try {
+			// 创建 DefaultListableBeanFactory
 			DefaultListableBeanFactory beanFactory = createBeanFactory();
+			// 为了序列化指定id,如果需要的话，让这个BeanFactory从id反序列化到BeanFactory对象
 			beanFactory.setSerializationId(getId());
+			// 定制 beanFactory, 设置相关属性，包括是否允许覆盖同名称的不同定义的对象、循环依赖
 			customizeBeanFactory(beanFactory);
+			// 初始化 DocumentReader,并进行 XML 文件读取及解析
 			loadBeanDefinitions(beanFactory);
 			synchronized (this.beanFactoryMonitor) {
 				this.beanFactory = beanFactory;
@@ -214,13 +218,18 @@ public abstract class AbstractRefreshableApplicationContext extends AbstractAppl
 	 * @see DefaultListableBeanFactory#setAllowRawInjectionDespiteWrapping
 	 * @see DefaultListableBeanFactory#setAllowEagerClassLoading
 	 */
+	// 这里已经开始了对 BeanFactory 的扩展，在基本容器的基础上，增加了是否允许覆盖、是否允许扩展的设置，
 	protected void customizeBeanFactory(DefaultListableBeanFactory beanFactory) {
+		// 是否允许覆盖同名称但是不同定义的对象
 		if (this.allowBeanDefinitionOverriding != null) {
 			beanFactory.setAllowBeanDefinitionOverriding(this.allowBeanDefinitionOverriding);
 		}
+		// 是否允许 bean 之间存在循环依赖
 		if (this.allowCircularReferences != null) {
 			beanFactory.setAllowCircularReferences(this.allowCircularReferences);
 		}
+		// 对于上述两个属性 this.allowBeanDefinitionOverriding 和 this.allowCircularReferences，我们会发现并没有
+		// 赋值操作，其实这也是 Spring 提供的一个隐式的扩展，我们可以通过继承扩展。而 beanFactory 中两个属性的默认值都是 true
 	}
 
 	/**
